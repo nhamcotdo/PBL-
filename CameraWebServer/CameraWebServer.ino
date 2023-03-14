@@ -25,8 +25,8 @@
 
 #include "camera_pins.h"
 
-const char* ssid = "BK High Tech 5G";
-const char* password = "24032015";
+const char* ssid = "nhamcotdo";
+const char* password = "11111111";
 // const char* ssid = "VIETTEL_9NfPYs";
 // const char* password = "h45g3uyf";
 // char ftpServer[] = "192.168.1.5";  // Replace with your FTP server IP address
