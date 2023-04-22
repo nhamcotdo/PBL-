@@ -104,5 +104,5 @@ def LSTM_model():
             return error, 400
 
 if __name__ == "__main__":
-    model = LSTMModel('./weights/weights.h5')
+    model = LSTMModel('./weights/weightsnewdata.h5')
     app.run(debug=True, port=5001, host="0.0.0.0")
