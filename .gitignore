@@ -3,3 +3,5 @@ XULYDULIEU/myenv/*
 XULYDULIEU/train/*
 Server/app/__pycache__/Common.cpython-310.pyc
 *.pyc
+*/data/*
+*.avi

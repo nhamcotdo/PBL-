@@ -4,7 +4,7 @@ import mediapipe as mp
 
 # Actions that we try to detect
 actions = np.array(
-    ['Bye', 'Fine', 'Good', 'Hello', 'I', 'You']
+    ['Bye', 'Fine', 'Good', 'Hello', 'I', 'You', 'Love', '']
     )
 
 sequence_length = 10
