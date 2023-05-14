@@ -1,17 +1,13 @@
-from flask import Flask, send_file
+from flask import Flask
 from flask_cors import cross_origin
 from flask import request
-from flask import jsonify
 import numpy as np
-import requests
-from io import BytesIO
 import tempfile
 import traceback
 from LSTM_model import *
-from redis import Redis
+import subprocess
 
 app = Flask(__name__)
-redis = Redis(host='redis', port=6379)
 
 @app.route("/")
 def hello():
@@ -32,8 +28,12 @@ def LSTM_model():
             
             with tempfile.NamedTemporaryFile(delete=False) as tmp:
                 file.save(tmp.name)
+                
+            c = 'ffmpeg -y -i ' + tmp.name + ' -r 20 -c:v libx264 -preset ultrafast -movflags +faststart ' + tmp.name + '_20fps.avi'
 
-            cap = cv2.VideoCapture(tmp.name)
+            subprocess.call(c, shell=True)
+
+            cap = cv2.VideoCapture(tmp.name + '_20fps.avi')
             if not cap.isOpened():
                 return 'Could not open video file', 400
             
@@ -41,7 +41,7 @@ def LSTM_model():
             sentence = []
             predictions = []
 
-
+            cap.set(cv2.CAP_PROP_XI_FRAMERATE, 20)
             # Set mediapipe model
             with mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=0.5) as holistic:
                 while cap.isOpened():
@@ -65,10 +65,10 @@ def LSTM_model():
                     if len(sequence) == sequence_length:
                         res = model.predict(np.expand_dims(sequence, axis=0))[0]
                         print(actions[np.argmax(res)])
-                        print(res)
+                        print(res[np.argmax(res)])
                         predictions.append(np.argmax(res))
 
-                        print(np.unique(predictions[-10:])[0])
+                        # print(np.unique(predictions[-10:])[0])
 
                         if np.unique(predictions[-10:])[0] == np.argmax(res):
                             if res[np.argmax(res)] > threshold:
@@ -104,5 +104,5 @@ def LSTM_model():
             return error, 400
 
 if __name__ == "__main__":
-    model = LSTMModel('./weights/weightsnewdata.h5')
+    model = LSTMModel(setting['weight'])
     app.run(debug=True, port=5001, host="0.0.0.0")

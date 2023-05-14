@@ -1,0 +1,21 @@
+{
+  "actions": [
+    "Bye",
+    "Eat",
+    "Fine",
+    "Good",
+    "Hello",
+    "I",
+    "You",
+    "Love",
+    " ",
+    "Read",
+    "What",
+    "Name",
+    "Sleep",
+    "Your"
+  ],
+  "threshold": 0.7,
+  "sequence_length" : 10,
+  "weight": "./weights/weight_rich_padding_bs2_lr0.001_lastest.h5"
+}

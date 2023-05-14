@@ -1,14 +1,16 @@
 import cv2
 import numpy as np
 import mediapipe as mp
+import json
+
+f = open('setting.json')
+setting = json.load(f)
 
 # Actions that we try to detect
-actions = np.array(
-    ['Bye', 'Fine', 'Good', 'Hello', 'I', 'You', 'Love', '']
-    )
+actions = setting['actions']
 
-sequence_length = 10
-threshold = 0.4
+sequence_length = setting['sequence_length']
+threshold = setting['threshold']
 mp_holistic = mp.solutions.holistic # Holistic model
 mp_drawing = mp.solutions.drawing_utils # Drawing utilities
 
