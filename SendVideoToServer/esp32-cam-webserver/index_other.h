@@ -1,4 +1,4 @@
-/*
+*
  * simpleviewer and streamviewer
  */
 
@@ -17,23 +17,22 @@ const uint8_t index_simple_html[] = R"=====(<!doctype html>
           display:flex;
           flex-wrap: nowrap;
           flex-direction: column;
-          align-items: flex-start;
+          align-items: center;
         }
       }
     </style>
   </head>
 
   <body>
-    <section class="main">
+    <section class="main" >
       <div id="logo">
         <label for="nav-toggle-cb" id="nav-toggle" style="float:left;" title="Settings">&#9776;&nbsp;</label>
-        <button id="swap-viewer" style="float:left;" title="Swap to full feature viewer">Full</button>
-        <button id="get-still" style="float:left;">Get Still</button>
-        <button id="toggle-stream" style="float:left;" class="hidden">Start Recorder</button>
+        <button id="swap-viewer" style="float:left; background-color: #509a27" title="Swap to full feature viewer">Full</button>
+        <button id="toggle-stream" style="float:left; ba" class="hidden">Start Recorder</button>
         <div id="wait-settings" style="float:left;" class="loader" title="Waiting for camera settings to load"></div>
       </div>
       <div id="content">
-        <div class="hidden" id="sidebar">
+        <div class="hidden" id="sidebar" style="height:90px;">
           <input type="checkbox" id="nav-toggle-cb">
             <nav id="menu" style="width:24em;">
               <div class="input-group hidden" id="lamp-group" title="Flashlight LED.&#013;&#013;Warning:&#013;Built-In lamps can be Very Bright! Avoid looking directly at LED&#013;Can draw a lot of power and may cause visual artifacts, affect WiFi or even brownout the camera on high settings">
@@ -72,7 +71,7 @@ const uint8_t index_simple_html[] = R"=====(<!doctype html>
             <img id="stream" src="">
           </div>
         </figure>
-        <div id="videofile"></div>
+        <div id="videofile" style="color: #509a27; font-size: 30px; font-weight: bold;"></div>
       </div>
     </section>
   </body>
@@ -88,7 +87,6 @@ const uint8_t index_simple_html[] = R"=====(<!doctype html>
     const rotate = document.getElementById('rotate')
     const view = document.getElementById('stream')
     const viewContainer = document.getElementById('stream-container')
-    const stillButton = document.getElementById('get-still')
     const streamButton = document.getElementById('toggle-stream')
     const closeButton = document.getElementById('close-stream')
     const swapButton = document.getElementById('swap-viewer')
@@ -213,9 +211,6 @@ const uint8_t index_simple_html[] = R"=====(<!doctype html>
         startStream();
       })
 
-    // Put some helpful text on the 'Still' button
-    stillButton.setAttribute("title", `Capture a still image :: ${baseHost}/capture`);
-
     const stopStream = () => {
       streamButton.innerHTML = 'Start Recorder';
       streamButton.setAttribute("title", `Start Recorder :: ${streamURL}`);
@@ -231,7 +226,7 @@ const uint8_t index_simple_html[] = R"=====(<!doctype html>
         var xhr = new XMLHttpRequest();
         xhr.open('POST', 'http://165.22.106.246/LSTM');
         xhr.onreadystatechange = function() {
-            videoFile.innerHTML = "Hanh dong trong video la: " + xhr.response;
+            videoFile.innerHTML = "Kết quả:" + xhr.response;
         };
         xhr.send(formData);
       })
@@ -267,14 +262,6 @@ const uint8_t index_simple_html[] = R"=====(<!doctype html>
    }
 
     // Attach actions to controls
-
-    stillButton.onclick = () => {
-      stopStream();
-      view.src = `${baseHost}/capture?_cb=${Date.now()}`;
-      view.scrollIntoView(false);
-      show(viewContainer);
-    }
-
     closeButton.onclick = () => {
       stopStream();
       hide(viewContainer);
@@ -372,6 +359,12 @@ const uint8_t streamviewer_html[] = R"=====(<!doctype html>
       @keyframes spin {
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
+      }
+
+      #videofile{
+        color: #509a27; 
+        font-size: 30px; 
+        font-weight: bold;
       }
     </style>
   </head>
