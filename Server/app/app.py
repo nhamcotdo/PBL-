@@ -1,3 +1,6 @@
+import logging
+from logging.config import dictConfig
+import os
 from flask import Flask
 from flask_cors import cross_origin
 from flask import request
@@ -6,6 +9,8 @@ import tempfile
 import traceback
 from LSTM_model import *
 import subprocess
+
+logging.basicConfig(filename='logs.log', level=logging.ERROR)
 
 app = Flask(__name__)
 
@@ -22,18 +27,15 @@ def LSTM_model():
                 return "The request must have path_file or video_file param", 400
             
             file = request.files['video_file']
-
             if file.filename == '':
                 return "No file selected", 400
             
-            with tempfile.NamedTemporaryFile(delete=False) as tmp:
+            save_folder = f'./files/'
+            with tempfile.NamedTemporaryFile(delete=False, dir=save_folder) as tmp:
                 file.save(tmp.name)
                 
-            c = 'ffmpeg -y -i ' + tmp.name + ' -r 20 -c:v libx264 -preset ultrafast -movflags +faststart ' + tmp.name + '_20fps.avi'
+            cap = cv2.VideoCapture(tmp.name)
 
-            subprocess.call(c, shell=True)
-
-            cap = cv2.VideoCapture(tmp.name + '_20fps.avi')
             if not cap.isOpened():
                 return 'Could not open video file', 400
             
@@ -59,6 +61,7 @@ def LSTM_model():
 
                     # 2. Prediction logic
                     keypoints = extract_keypoints(results)
+                    keypoints = keypoints / np.max([np.abs(keypoints), np.abs(keypoints)])
                     sequence.append(keypoints)
                     sequence = sequence[-sequence_length:]
 
@@ -72,7 +75,7 @@ def LSTM_model():
 
                         if np.unique(predictions[-10:])[0] == np.argmax(res):
                             if res[np.argmax(res)] > threshold:
-
+                                sequence = []
                                 if len(sentence) > 0:
                                     if actions[np.argmax(res)] != sentence[-1]:
                                         sentence.append(actions[np.argmax(res)])
@@ -91,15 +94,76 @@ def LSTM_model():
                         # break
 
                 cap.release()
+                save_path = os.path.join(save_folder, file.filename)
+                os.rename(tmp.name, save_path)
+                rs = ' '.join(sentence)
                 cv2.destroyAllWindows()
 
-            return ' '.join(sentence)
+                f = open('result.json')
+                results = json.load(f)
+                f.close()
+                results[save_path] = rs
+                with open('result.json', 'w') as json_file:
+                    json.dump(results, json_file)
+
+            return rs
             
         except Exception as e:
             error = "'Error': '" + str(e) + "'"
             print(error)
 
             traceback.print_exc()
+            app.logger.error(e.with_traceback())
+
+            return error, 400
+@app.route('/LSTM/single', methods=['POST'])
+@cross_origin(origin='*')
+def LSTM_model_single():
+    if request.method == 'POST':
+        try:
+            if 'video_file' not in request.files:
+                return "The request must have path_file or video_file param", 400
+            
+            file = request.files['video_file']
+
+            if file.filename == '':
+                return "No file selected", 400
+            
+            save_folder = f'./files/'
+            with tempfile.NamedTemporaryFile(delete=False, dir=save_folder) as tmp:
+                file.save(tmp.name)
+                
+
+            cap = cv2.VideoCapture(tmp.name)
+            if not cap.isOpened():
+                return 'Could not open video file', 400
+            
+            keypoints = frames_extraction(tmp.name)
+            keypoints = keypoints / np.max([np.abs(keypoints), np.abs(keypoints)])
+        
+            if len(keypoints) == sequence_length:
+                res = model.predict(np.reshape(keypoints, (1,  sequence_length, 300)))[0]
+                word = actions[np.argmax(res)]
+            
+            save_path = os.path.join(save_folder, file.filename)
+            os.rename(tmp.name, save_path)
+            cv2.destroyAllWindows()
+
+            f = open('result.json')
+            results = json.load(f)
+            f.close()
+            results[save_path] = word
+            with open('result.json', 'w') as json_file:
+                json.dump(results, json_file)
+
+            return word
+            
+        except Exception as e:
+            error = "'Error': '" + str(e) + "'"
+            print(error)
+
+            traceback.print_exc()
+            app.logger.error(e.with_traceback())
 
             return error, 400
 
