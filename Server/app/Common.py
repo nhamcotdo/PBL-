@@ -46,3 +46,40 @@ def extract_keypoints(results):
     rh = np.array([[res.x, res.y, res.z, res.visibility] for res in results.right_hand_landmarks.landmark]).flatten() if results.right_hand_landmarks else np.zeros(21*4)
 
     return np.concatenate([pose, lh, rh])
+
+def frames_extraction(video_path):
+    video_reader = cv2.VideoCapture(video_path)
+    video_frames_count = 0
+    s, f = video_reader.read()
+    while s:
+        s, f = video_reader.read()
+        video_frames_count += 1
+    video_reader.release()
+
+    if video_frames_count < sequence_length:
+        return []
+    skip_frames = int(0.1 * video_frames_count)
+    skip_frames_window = max(int((video_frames_count - skip_frames*2) /sequence_length), 1)
+
+    # Danh sách chứa các frame sẽ lấy
+    video_keypoints = []
+
+    cap = cv2.VideoCapture(video_path)
+    with mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=0.5) as holistic:
+        for frame_counter in range(sequence_length):
+            cap.set(cv2.CAP_PROP_POS_FRAMES,
+                    skip_frames + frame_counter * skip_frames_window)
+            
+            ret, frame = cap.read()
+            if not ret:
+                print('eror')
+                continue
+
+            image, results = mediapipe_detection(frame, holistic)
+            draw_styled_landmarks(image, results)   
+
+            keypoints = extract_keypoints(results)
+            video_keypoints.append(keypoints)
+    cap.release()
+    cv2.destroyAllWindows()
+    return video_keypoints

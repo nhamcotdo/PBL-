@@ -8,7 +8,7 @@
     "I",
     "You",
     "Love",
-    " ",
+    "_",
     "Read",
     "What",
     "Name",
@@ -16,6 +16,6 @@
     "Your"
   ],
   "threshold": 0.7,
-  "sequence_length" : 10,
-  "weight": "./weights/weight_rich_padding_bs2_lr0.001_lastest.h5"
+  "sequence_length" : 12,
+  "weight": "./weights/weight_rich_padding_bs4_lr0.001_v2.h5"
 }
