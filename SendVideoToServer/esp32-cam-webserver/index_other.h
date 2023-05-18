@@ -226,7 +226,7 @@ const uint8_t index_simple_html[] = R"=====(<!doctype html>
         var xhr = new XMLHttpRequest();
         xhr.open('POST', 'http://165.22.106.246/LSTM');
         xhr.onreadystatechange = function() {
-            videoFile.innerHTML = xhr.response;
+            videoFile.innerHTML = "Kết quả:" + xhr.response;
         };
         xhr.send(formData);
       })
@@ -365,10 +365,6 @@ const uint8_t streamviewer_html[] = R"=====(<!doctype html>
         color: #509a27; 
         font-size: 30px; 
         font-weight: bold;
-      }
-
-      .main {
-        background-image: url('./src/wp6944999.png');
       }
     </style>
   </head>
