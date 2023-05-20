@@ -1,5 +1,6 @@
 import logging
 from logging.config import dictConfig
+from logging.handlers import RotatingFileHandler
 import os
 from flask import Flask
 from flask_cors import cross_origin
@@ -10,9 +11,31 @@ import traceback
 from LSTM_model import *
 import subprocess
 
-logging.basicConfig(filename='logs.log', level=logging.ERROR)
 
 app = Flask(__name__)
+
+logging.basicConfig(filename='logs.log', level=logging.INFO)
+# Create a logger
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+# Create a formatter
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+
+# Create a file handler and set the formatter
+file_handler = RotatingFileHandler('logs.log', maxBytes=10240, backupCount=10)
+file_handler.setLevel(logging.INFO)
+file_handler.setFormatter(formatter)
+
+# Create a stream handler and set the formatter
+stream_handler = logging.StreamHandler()
+stream_handler.setLevel(logging.INFO)
+stream_handler.setFormatter(formatter)
+
+# Add the handlers to the logger
+logger.addHandler(file_handler)
+logger.addHandler(stream_handler)
+
 
 @app.route("/")
 def hello():
@@ -23,6 +46,7 @@ def hello():
 def LSTM_model():
     if request.method == 'POST':
         try:
+            logger.info('Start request')
             if 'video_file' not in request.files:
                 return "The request must have path_file or video_file param", 400
             
@@ -79,6 +103,7 @@ def LSTM_model():
                                 if len(sentence) > 0:
                                     if actions[np.argmax(res)] != sentence[-1]:
                                         sentence.append(actions[np.argmax(res)])
+                                        print(actions[np.argmax(res)])
                                 else:
                                     sentence.append(actions[np.argmax(res)])
 
@@ -105,15 +130,17 @@ def LSTM_model():
                 results[save_path] = rs
                 with open('result.json', 'w') as json_file:
                     json.dump(results, json_file)
-
-            return rs
+                
+            logger.info(f'Kết quả {rs}')
+            logger.info('Done request')
+            return rs or 'Không nhận dạng được'
             
         except Exception as e:
             error = "'Error': '" + str(e) + "'"
             print(error)
 
             traceback.print_exc()
-            app.logger.error(e.with_traceback())
+            logger.error(e.with_traceback())
 
             return error, 400
 @app.route('/LSTM/single', methods=['POST'])
@@ -121,6 +148,7 @@ def LSTM_model():
 def LSTM_model_single():
     if request.method == 'POST':
         try:
+            logger.info('Start request')
             if 'video_file' not in request.files:
                 return "The request must have path_file or video_file param", 400
             
@@ -155,18 +183,21 @@ def LSTM_model_single():
             results[save_path] = word
             with open('result.json', 'w') as json_file:
                 json.dump(results, json_file)
-
-            return word
+            
+            logger.info(f'Kết quả {word}')
+            print(word)
+            logger.info('Done request')
+            return word or 'Không nhận dạng được'
             
         except Exception as e:
             error = "'Error': '" + str(e) + "'"
             print(error)
 
             traceback.print_exc()
-            app.logger.error(e.with_traceback())
+            logger.error(e.with_traceback())
 
             return error, 400
 
 if __name__ == "__main__":
     model = LSTMModel(setting['weight'])
-    app.run(debug=True, port=5001, host="0.0.0.0")
+    app.run(debug=False, port=5001, host="0.0.0.0")
