@@ -1,7 +1,3 @@
-*
- * simpleviewer and streamviewer
- */
-
 const uint8_t index_simple_html[] = R"=====(<!doctype html>
 <html>
   <head>
@@ -28,7 +24,8 @@ const uint8_t index_simple_html[] = R"=====(<!doctype html>
       <div id="logo">
         <label for="nav-toggle-cb" id="nav-toggle" style="float:left;" title="Settings">&#9776;&nbsp;</label>
         <button id="swap-viewer" style="float:left; background-color: #509a27" title="Swap to full feature viewer">Full</button>
-        <button id="toggle-stream" style="float:left; ba" class="hidden">Start Recorder</button>
+        <button id="toggle-stream" style="float:left; ba">Start Recorder</button>
+        <button id="single" style="float:left; ba">Single</button>
         <div id="wait-settings" style="float:left;" class="loader" title="Waiting for camera settings to load"></div>
       </div>
       <div id="content">
@@ -88,6 +85,7 @@ const uint8_t index_simple_html[] = R"=====(<!doctype html>
     const view = document.getElementById('stream')
     const viewContainer = document.getElementById('stream-container')
     const streamButton = document.getElementById('toggle-stream')
+    const singleButton = document.getElementById('single')
     const closeButton = document.getElementById('close-stream')
     const swapButton = document.getElementById('swap-viewer')
     const videoFile = document.getElementById('videofile')
@@ -207,10 +205,10 @@ const uint8_t index_simple_html[] = R"=====(<!doctype html>
           })
         hide(waitSettings);
         show(settings);
-        show(streamButton);
-        startStream();
+        //show(streamButton);
+        // startStream();
       })
-
+   
     const stopStream = () => {
       streamButton.innerHTML = 'Start Recorder';
       streamButton.setAttribute("title", `Start Recorder :: ${streamURL}`);
@@ -224,7 +222,7 @@ const uint8_t index_simple_html[] = R"=====(<!doctype html>
         var formData = new FormData();
         formData.append('video_file', file);
         var xhr = new XMLHttpRequest();
-        xhr.open('POST', 'http://165.22.106.246/LSTM');
+        xhr.open('POST', 'http://nhamcotdo.ddns.net/LSTM');
         xhr.onreadystatechange = function() {
             videoFile.innerHTML = "Kết quả:" + xhr.response;
         };
@@ -236,6 +234,35 @@ const uint8_t index_simple_html[] = R"=====(<!doctype html>
       view.src = streamURL;
       view.scrollIntoView(false);
       streamButton.innerHTML = 'Send video';
+      fetch(`${baseHost}/recorder`);
+      show(viewContainer);
+    }
+
+    const stopStreamSingle = () => {
+      singleButton.innerHTML = 'Single';
+      singleButton.setAttribute("title", `Start Recorder :: ${streamURL}`);
+      //hide(viewContainer);
+
+      fetch(`${baseHost}/stop`)
+      .then((res) => res.blob())
+      .then(function (blob) {
+        videoFile.innerHTML = "Uploading";
+        const file = new File([blob], 'video.avi', { type: 'avi'});
+        var formData = new FormData();
+        formData.append('video_file', file);
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', 'http://nhamcotdo.ddns.net/LSTM/single');
+        xhr.onreadystatechange = function() {
+            videoFile.innerHTML = "Kết quả:" + xhr.response;
+        };
+        xhr.send(formData);
+      })
+    }
+
+     const startStreamSingle = () => {
+      view.src = streamURL;
+      view.scrollIntoView(false);
+      singleButton.innerHTML = 'Send video';
       fetch(`${baseHost}/recorder`);
       show(viewContainer);
     }
@@ -273,6 +300,15 @@ const uint8_t index_simple_html[] = R"=====(<!doctype html>
         stopStream();
       } else {
         startStream();
+      }
+    }
+
+     singleButton.onclick = () => {
+      const streamEnabled = singleButton.innerHTML === 'Send video'
+      if (streamEnabled) {
+        stopStreamSingle();
+      } else {
+        startStreamSingle();
       }
     }
 
@@ -379,7 +415,7 @@ const uint8_t streamviewer_html[] = R"=====(<!doctype html>
         <div id="cam_name" class="action-setting hidden"></div>
         <div id="stream_url" class="action-setting hidden"></div>
       </div>
-      <img id="stream" src="">
+      <iframe id="stream" src=""></iframe>
     </section>
   </body>
 
@@ -434,7 +470,7 @@ const uint8_t streamviewer_html[] = R"=====(<!doctype html>
           })
         spinner.style.display = `none`;
         applyRotation();
-        startStream();
+         startStream();
       })
 
     const startStream = () => {

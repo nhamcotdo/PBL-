@@ -300,24 +300,24 @@ static esp_err_t stream_handler(httpd_req_t *req){
         if(res != ESP_OK){
             // This is the error exit point from the stream loop.
             // We end the stream here only if a Hard failure has been encountered or the connection has been interrupted.
-            Serial.printf("Stream failed, code = %i : %s\r\n", res, esp_err_to_name(res));
+            //Serial.printf("Stream failed, code = %i : %s\r\n", res, esp_err_to_name(res));
             break;
         }
         if((res != ESP_OK) || streamKill){
             // We end the stream here when a kill is signalled.
-            Serial.printf("Stream killed\r\n");
+            //Serial.printf("Stream killed\r\n");
             break;
         }
         int64_t frame_time = esp_timer_get_time() - last_frame;
         frame_time /= 1000;
-        int32_t frame_delay = (minFrameTime > frame_time) ? minFrameTime - frame_time : 0;
+        int32_t frame_delay = (120 > frame_time) ? 120 - frame_time : 0;
         delay(frame_delay);
 
-        if (debugData) {
-            Serial.printf("MJPG: %uB %ums, delay: %ums, framerate (%.1ffps)\r\n",
-                (uint32_t)(_jpg_buf_len),
-                (uint32_t)frame_time, frame_delay, 1000.0 / (uint32_t)(frame_time + frame_delay));
-        }
+        // if (debugData) {
+        //     Serial.printf("MJPG: %uB %ums, delay: %ums, framerate (%.1ffps)\r\n",
+        //         (uint32_t)(_jpg_buf_len),
+        //         (uint32_t)frame_time, frame_delay, 1000.0 / (uint32_t)(frame_time + frame_delay));
+        // }
         last_frame = esp_timer_get_time();
     }
 
@@ -659,7 +659,12 @@ static esp_err_t stop_handler(httpd_req_t *req){
       videoFile.close();
       fileName = "";
       Serial.printf("####################### video_size: %d", videoFileSize);
-      return httpd_resp_send(req, (const char*) videoFileData, videoFileSize);
+      esp_err_t r = httpd_resp_send(req, (const char*) videoFileData, videoFileSize);
+      if(videoFileData){
+        free(videoFileData);
+        videoFileData = NULL;
+      }
+      return r;
     }else{
       return httpd_resp_send(req, NULL, 0);
     }
